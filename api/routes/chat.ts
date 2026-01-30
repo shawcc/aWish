@@ -61,6 +61,7 @@ router.post('/send-message', async (req: Request, res: Response) => {
       if (content) {
         res.write(`data: ${JSON.stringify({ content })}\n\n`);
         // Flush the response to ensure the client receives the data immediately
+        // @ts-ignore
         if (res.flush) res.flush(); 
       }
     }
