@@ -16,7 +16,7 @@ export default function Register() {
     setError(null);
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -27,6 +27,12 @@ export default function Register() {
       });
 
       if (error) throw error;
+      
+      if (data.user && !data.session) {
+         setError('注册成功！请前往您的邮箱查收验证邮件，验证通过后即可登录。');
+         return;
+      }
+
       navigate('/');
     } catch (err: any) {
       setError(err.message);

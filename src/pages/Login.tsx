@@ -23,7 +23,14 @@ export default function Login() {
       if (error) throw error;
       navigate('/');
     } catch (err: any) {
-      setError(err.message);
+      console.error('Login error:', err);
+      if (err.message === 'Email not confirmed') {
+        setError('您的邮箱尚未验证，请查收验证邮件。');
+      } else if (err.message === 'Invalid login credentials') {
+        setError('邮箱或密码错误，请重试。');
+      } else {
+        setError(err.message || '登录失败，请稍后重试');
+      }
     } finally {
       setLoading(false);
     }

@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Layout from "./components/Layout";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
@@ -8,36 +8,82 @@ import Requirements from "./pages/Requirements";
 import RequirementDetail from "./pages/RequirementDetail";
 import Notifications from "./pages/Notifications";
 import Profile from "./pages/Profile";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 
 // Simple Protected Route component
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
-  // Ideally, we check auth state here. 
-  // For now, Supabase client handles session check in components.
-  // We can add a global auth context later.
+  const { user, loading } = useAuth();
+  const location = useLocation();
+
+  if (loading) {
+    return <div className="flex h-screen items-center justify-center">Loading...</div>;
+  }
+
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
   return children;
 };
 
 export default function App() {
   return (
-    <Router>
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+    <AuthProvider>
+      <Router>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
 
-        {/* Protected Routes wrapped in Layout */}
-        <Route element={<Layout />}>
-          <Route path="/" element={<Home />} />
-          <Route path="/chat" element={<Chat />} />
-          <Route path="/requirements" element={<Requirements />} />
-          <Route path="/requirements/:id" element={<RequirementDetail />} />
-          <Route path="/notifications" element={<Notifications />} />
-          <Route path="/profile" element={<Profile />} />
-        </Route>
-        
-        {/* 404 Redirect */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Router>
+          {/* Protected Routes wrapped in Layout */}
+          <Route element={<Layout />}>
+            <Route path="/" element={<Home />} />
+            <Route
+              path="/chat"
+              element={
+                <ProtectedRoute>
+                  <Chat />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/requirements"
+              element={
+                <ProtectedRoute>
+                  <Requirements />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/requirements/:id"
+              element={
+                <ProtectedRoute>
+                  <RequirementDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/notifications"
+              element={
+                <ProtectedRoute>
+                  <Notifications />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
+          </Route>
+          
+          {/* 404 Redirect */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }

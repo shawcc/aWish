@@ -2,8 +2,7 @@ import { Fragment } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { Disclosure, Menu, Transition } from '@headlessui/react';
 import { Menu as MenuIcon, X, UserCircle, Bell } from 'lucide-react';
-import { supabase } from '../lib/supabase';
-import { useEffect, useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(' ');
@@ -12,24 +11,10 @@ function classNames(...classes: string[]) {
 export default function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [user, setUser] = useState<any>(null);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+  const { user, signOut } = useAuth();
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    await signOut();
     navigate('/login');
   };
 
