@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 interface Message {
   role: 'user' | 'assistant';
   content: string;
+  fullContent?: string;
 }
 
 export default function Chat() {
