@@ -49,6 +49,75 @@ export default function Chat() {
 
   // ... (keep existing sendMessage function)
 
+  const sendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim() || loading) return;
+
+    const userMessage: Message = { role: 'user', content: input };
+    setMessages((prev) => [...prev, userMessage]);
+    setInput('');
+    setLoading(true);
+
+    try {
+      const response = await fetch('/api/chat/send-message', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: userMessage.content,
+          history: messages.map(m => ({ role: m.role, content: m.content })),
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to send message');
+
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error('No reader available');
+
+      const assistantMessage: Message = { role: 'assistant', content: '', fullContent: '' };
+      setMessages((prev) => [...prev, assistantMessage]);
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = new TextDecoder().decode(value);
+        const lines = chunk.split('\n\n');
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6);
+            if (data === '[DONE]') break;
+
+            try {
+              const { content } = JSON.parse(data);
+              setMessages((prev) => {
+                const newMessages = [...prev];
+                const lastMessage = newMessages[newMessages.length - 1];
+                
+                // Update full content
+                lastMessage.fullContent = (lastMessage.fullContent || '') + content;
+                
+                // Extract MRD and update clean content
+                const cleanContent = extractMrdData(lastMessage.fullContent);
+                lastMessage.content = cleanContent;
+                
+                return newMessages;
+              });
+            } catch (e) {
+              console.error('Error parsing JSON:', e);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleFinish = async () => {
     if (!mrdData || !user) return;
     
