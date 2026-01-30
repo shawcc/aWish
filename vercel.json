@@ -1,8 +1,8 @@
 {
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/index.js"
+      "source": "/api/chat/send-message",
+      "destination": "/api/v1/chat"
     },
     {
       "source": "/(.*)",
@@ -10,7 +10,7 @@
     }
   ],
   "functions": {
-    "api/index.ts": {
+    "api/v1/chat.ts": {
       "maxDuration": 60
     }
   }
